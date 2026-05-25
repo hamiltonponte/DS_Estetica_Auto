@@ -20,6 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/configure-pages@v5
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -31,6 +33,11 @@ jobs:
         run: |
           npm install
           npm run build
+
+      - name: Verificar pasta dist
+        run: |
+          test -f dist/index.html
+          grep -q "/DS_Estetica_Auto/assets/" dist/index.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
