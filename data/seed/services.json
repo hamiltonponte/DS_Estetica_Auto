@@ -1,0 +1,138 @@
+[
+  {
+    "name": "Lavagem Simples",
+    "description": "Lavagem externa com shampoo neutro e secagem.",
+    "price": 50,
+    "duration_minutes": 30,
+    "category": "lavagem",
+    "active": true
+  },
+  {
+    "name": "Lavagem Detalhada",
+    "description": "Lavagem externa completa com rodas, caixas de roda e pneus.",
+    "price": 120,
+    "duration_minutes": 90,
+    "category": "lavagem",
+    "active": true
+  },
+  {
+    "name": "Lavagem a Seco",
+    "description": "Limpeza externa sem uso excessivo de água.",
+    "price": 90,
+    "duration_minutes": 60,
+    "category": "lavagem",
+    "active": true
+  },
+  {
+    "name": "Higienização Interna",
+    "description": "Aspiração, limpeza de painéis, console e carpetes.",
+    "price": 200,
+    "duration_minutes": 120,
+    "category": "higienizacao",
+    "active": true
+  },
+  {
+    "name": "Higienização Completa",
+    "description": "Interior completo com produtos específicos e aromatização.",
+    "price": 350,
+    "duration_minutes": 180,
+    "category": "higienizacao",
+    "active": true
+  },
+  {
+    "name": "Sanitização com Ozônio",
+    "description": "Eliminação de odores e bactérias no habitáculo.",
+    "price": 80,
+    "duration_minutes": 45,
+    "category": "higienizacao",
+    "active": true
+  },
+  {
+    "name": "Polimento Técnico",
+    "description": "Correção leve de swirls e melhoria do brilho.",
+    "price": 450,
+    "duration_minutes": 180,
+    "category": "polimento",
+    "active": true
+  },
+  {
+    "name": "Polimento Completo",
+    "description": "Correção em etapas com acabamento espelhado.",
+    "price": 800,
+    "duration_minutes": 300,
+    "category": "polimento",
+    "active": true
+  },
+  {
+    "name": "Cristalização",
+    "description": "Proteção e brilho após polimento.",
+    "price": 350,
+    "duration_minutes": 120,
+    "category": "polimento",
+    "active": true
+  },
+  {
+    "name": "Aplicação de Cera",
+    "description": "Cera carnaúba ou sintética na pintura.",
+    "price": 150,
+    "duration_minutes": 60,
+    "category": "protecao",
+    "active": true
+  },
+  {
+    "name": "Selante Sintético",
+    "description": "Proteção de média duração com repelência.",
+    "price": 280,
+    "duration_minutes": 90,
+    "category": "protecao",
+    "active": true
+  },
+  {
+    "name": "Coating de Proteção",
+    "description": "Proteção química da pintura (selante profissional).",
+    "price": 400,
+    "duration_minutes": 120,
+    "category": "protecao",
+    "active": true
+  },
+  {
+    "name": "Vitrificação 1 Ano",
+    "description": "Coating cerâmico com durabilidade aproximada de 12 meses.",
+    "price": 1200,
+    "duration_minutes": 240,
+    "category": "vitrificacao",
+    "active": true
+  },
+  {
+    "name": "Vitrificação 2 Anos",
+    "description": "Coating cerâmico premium com maior durabilidade.",
+    "price": 1800,
+    "duration_minutes": 300,
+    "category": "vitrificacao",
+    "active": true
+  },
+  {
+    "name": "Manutenção de Vitrificação",
+    "description": "Lavagem técnica e reforço do coating existente.",
+    "price": 400,
+    "duration_minutes": 120,
+    "category": "vitrificacao",
+    "active": true
+  },
+  {
+    "name": "Revitalização de Plásticos",
+    "description": "Plásticos externos e borrachas com acabamento renovado.",
+    "price": 120,
+    "duration_minutes": 60,
+    "category": "outros",
+    "active": true
+  },
+  {
+    "name": "Limpeza de Motor",
+    "description": "Desengraxe e proteção do compartimento do motor.",
+    "price": 150,
+    "duration_minutes": 90,
+    "category": "outros",
+    "active": true
+  }
+]

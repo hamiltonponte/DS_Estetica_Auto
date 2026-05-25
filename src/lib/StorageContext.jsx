@@ -8,6 +8,7 @@ import {
 } from '@/lib/storage/fileSystem';
 import { setStorageRoot } from '@/lib/storage/entityStore';
 import { syncWorkbook } from '@/lib/storage/excelSync';
+import { seedServicesIfEmpty } from '@/lib/storage/seedData';
 
 const StorageContext = createContext(null);
 
@@ -21,6 +22,7 @@ export function StorageProvider({ children }) {
   const applyHandle = useCallback(async (handle) => {
     setStorageRoot(handle);
     setFolderName(await getDirectoryName(handle));
+    await seedServicesIfEmpty(handle);
     await syncWorkbook(handle);
     setReady(true);
     setError(null);

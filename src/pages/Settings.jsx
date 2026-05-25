@@ -1,8 +1,10 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Save, Building2, Phone, CreditCard, Bell, FolderOpen, FileSpreadsheet } from 'lucide-react';
+import { Save, Building2, Phone, CreditCard, Bell, FolderOpen, FileSpreadsheet, Upload, Wrench } from 'lucide-react';
 import { useStorage } from '@/lib/StorageContext';
+import { getStorageRoot } from '@/lib/storage/entityStore';
+import { importServicesFromJson, seedServicesIfEmpty } from '@/lib/storage/seedData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,6 +27,49 @@ export default function Settings() {
   const queryClient = useQueryClient();
   const { folderName, changeFolder } = useStorage();
   const [form, setForm] = useState(null);
+  const [importing, setImporting] = useState(false);
+
+  const handleImportServices = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const root = getStorageRoot();
+    if (!root) {
+      toast({ title: 'Selecione a pasta de dados primeiro', variant: 'destructive' });
+      return;
+    }
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      const result = await importServicesFromJson(root, json, { replace: false });
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+      toast({ title: `${result.imported} serviço(s) importado(s). Total: ${result.count}` });
+    } catch (err) {
+      toast({ title: err.message || 'Erro ao importar JSON', variant: 'destructive' });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleLoadDefaultCatalog = async () => {
+    const root = getStorageRoot();
+    if (!root) return;
+    setImporting(true);
+    try {
+      const result = await seedServicesIfEmpty(root);
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+      toast({
+        title: result.seeded
+          ? `Catálogo inicial: ${result.count} serviços`
+          : `Já existem ${result.count} serviços cadastrados`,
+      });
+    } catch (err) {
+      toast({ title: err.message || 'Erro ao carregar catálogo', variant: 'destructive' });
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const { data: configs = [] } = useQuery({
     queryKey: ['business-config'],
@@ -95,6 +140,34 @@ export default function Settings() {
           <Button type="button" variant="outline" onClick={changeFolder}>
             <FolderOpen className="w-4 h-4 mr-2" /> Trocar pasta de dados
           </Button>
+        </Section>
+
+        <Section icon={Wrench} title="Serviços (migração Base44)">
+          <p className="text-sm text-muted-foreground">
+            Na primeira configuração da pasta, o app já carrega um catálogo padrão de estética automotiva
+            (lavagem, higienização, polimento, proteção, vitrificação).
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Para trazer os serviços exatos do Base44: no editor antigo, exporte a entidade Service como JSON
+            e importe abaixo. Se a lista estiver vazia, use o catálogo inicial.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={handleLoadDefaultCatalog} disabled={importing}>
+              Carregar catálogo inicial
+            </Button>
+            <Button type="button" variant="outline" asChild disabled={importing}>
+              <label className="cursor-pointer flex items-center">
+                <Upload className="w-4 h-4 mr-2" />
+                {importing ? 'Importando...' : 'Importar JSON do Base44'}
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={handleImportServices}
+                />
+              </label>
+            </Button>
+          </div>
         </Section>
 
         <Section icon={Building2} title="Dados do Negócio">
