@@ -2,11 +2,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Car, Calendar, Wrench,
-  DollarSign, Sparkles, ChevronLeft, ChevronRight,
+  DollarSign, ChevronLeft, ChevronRight,
   Package, Play, Gift, Settings2, FolderOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStorage } from '@/lib/StorageContext';
+import BrandLogo from '@/components/brand/BrandLogo';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
@@ -30,18 +31,21 @@ export default function Sidebar({ collapsed, onToggle }) {
       "fixed left-0 top-0 h-screen bg-sidebar text-sidebar-foreground flex flex-col z-50 transition-all duration-300 border-r border-sidebar-border",
       collapsed ? "w-[72px]" : "w-64"
     )}>
-      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-5 h-5 text-accent-foreground" />
+      <div className={cn(
+        "flex items-center border-b border-sidebar-border",
+        collapsed ? "h-20 justify-center px-2" : "h-20 px-4 gap-3"
+      )}>
+        <BrandLogo size={collapsed ? 'md' : 'lg'} />
+        {!collapsed && (
+          <div className="overflow-hidden min-w-0">
+            <h1 className="text-base font-brand font-bold tracking-tight text-sidebar-foreground leading-tight">
+              DS Estética Auto
+            </h1>
+            <p className="text-[10px] text-accent font-semibold uppercase tracking-widest">
+              Estética Automotiva
+            </p>
           </div>
-          {!collapsed && (
-            <div className="overflow-hidden">
-              <h1 className="text-lg font-bold tracking-tight text-sidebar-foreground">DS Estética Auto</h1>
-              <p className="text-[10px] text-sidebar-foreground/50 uppercase tracking-widest">PWA Offline</p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
@@ -55,7 +59,7 @@ export default function Sidebar({ collapsed, onToggle }) {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "bg-accent text-accent-foreground shadow-lg shadow-accent/20"
+                  ? "bg-accent text-accent-foreground shadow-lg shadow-accent/25"
                   : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
               )}
             >
@@ -83,7 +87,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
       <button
         onClick={onToggle}
-        className="absolute -right-3 top-20 w-6 h-6 bg-accent text-accent-foreground rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+        className="absolute -right-3 top-24 w-6 h-6 bg-accent text-accent-foreground rounded-full flex items-center justify-center shadow-lg shadow-accent/30 hover:scale-110 transition-transform"
       >
         {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>

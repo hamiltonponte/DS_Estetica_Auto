@@ -34,9 +34,9 @@ export default function ServiceReceiptModal({ execution, onClose }) {
         </DialogHeader>
 
         <div className="space-y-4" id="receipt-content">
-          <div className="bg-primary text-primary-foreground rounded-xl p-4 text-center">
-            <h2 className="text-lg font-bold">DS Estética Auto</h2>
-            <p className="text-xs text-primary-foreground/70">Estética Automotiva</p>
+          <div className="brand-hero rounded-xl p-4 text-center">
+            <h2 className="text-lg font-brand font-bold text-foreground">DS Estética Auto</h2>
+            <p className="text-xs text-accent font-semibold uppercase tracking-wider">Estética Automotiva</p>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4 space-y-2">

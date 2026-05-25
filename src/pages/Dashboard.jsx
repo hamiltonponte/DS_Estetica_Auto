@@ -5,9 +5,10 @@ import { useOutletContext } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { 
   Users, Calendar, DollarSign, TrendingUp, Car,
-  Clock, CheckCircle2, AlertCircle, ArrowRight, Menu, Sparkles
+  Clock, CheckCircle2, AlertCircle, ArrowRight, Menu
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import BrandLogo from '@/components/brand/BrandLogo';
 import { Badge } from '@/components/ui/badge';
 import StatCard from '@/components/shared/StatCard';
 import ProductStockWidget from '@/components/dashboard/ProductStockWidget';
@@ -61,24 +62,24 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground">
+      <div className="brand-hero text-foreground">
         <div className="px-4 md:px-6 py-6 md:py-8">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden text-primary-foreground hover:bg-white/10"
+                className="md:hidden hover:bg-accent/10"
                 onClick={() => context?.setMobileOpen?.(true)}
               >
                 <Menu className="w-5 h-5" />
               </Button>
+              <BrandLogo size="lg" className="hidden sm:block" />
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-5 h-5 text-accent" />
-                  <span className="text-sm font-medium text-primary-foreground/70">DS Estética Auto</span>
-                </div>
-                <h1 className="text-2xl md:text-3xl font-bold">
+                <p className="text-sm font-semibold text-accent font-brand uppercase tracking-wider mb-1">
+                  DS Estética Auto
+                </p>
+                <h1 className="text-2xl md:text-3xl font-brand font-bold capitalize">
                   {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
                 </h1>
               </div>
@@ -87,37 +88,37 @@ export default function Dashboard() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <div className="bg-card/60 backdrop-blur-sm rounded-2xl p-4 border border-accent/20">
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-4 h-4 text-accent" />
-                <span className="text-xs text-primary-foreground/70">Hoje</span>
+                <span className="text-xs text-muted-foreground">Hoje</span>
               </div>
               <p className="text-2xl font-bold">{todayAppointments.length}</p>
-              <p className="text-xs text-primary-foreground/50">agendamentos</p>
+              <p className="text-xs text-muted-foreground">agendamentos</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <div className="bg-card/60 backdrop-blur-sm rounded-2xl p-4 border border-accent/20">
               <div className="flex items-center gap-2 mb-2">
                 <Users className="w-4 h-4 text-accent" />
-                <span className="text-xs text-primary-foreground/70">Clientes</span>
+                <span className="text-xs text-muted-foreground">Clientes</span>
               </div>
               <p className="text-2xl font-bold">{clients.length}</p>
-              <p className="text-xs text-primary-foreground/50">cadastrados</p>
+              <p className="text-xs text-muted-foreground">cadastrados</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <div className="bg-card/60 backdrop-blur-sm rounded-2xl p-4 border border-accent/20">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="w-4 h-4 text-accent" />
-                <span className="text-xs text-primary-foreground/70">Faturamento</span>
+                <span className="text-xs text-muted-foreground">Faturamento</span>
               </div>
               <p className="text-2xl font-bold">R$ {monthRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</p>
-              <p className="text-xs text-primary-foreground/50">este mês</p>
+              <p className="text-xs text-muted-foreground">este mês</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <div className="bg-card/60 backdrop-blur-sm rounded-2xl p-4 border border-accent/20">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="w-4 h-4 text-amber-400" />
-                <span className="text-xs text-primary-foreground/70">Pendente</span>
+                <span className="text-xs text-muted-foreground">Pendente</span>
               </div>
               <p className="text-2xl font-bold">R$ {pendingPayments.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</p>
-              <p className="text-xs text-primary-foreground/50">a receber</p>
+              <p className="text-xs text-muted-foreground">a receber</p>
             </div>
           </div>
         </div>

@@ -20,13 +20,13 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['brand/logo-ds.jpg', 'pwa-192.png', 'pwa-512.png'],
       manifest: {
         name: 'DS Estética Auto — Gestão Estética Automotiva',
         short_name: 'DS Estética',
         description: 'PWA offline DS Estética Auto — gestão de detailing com dados na pasta do aparelho.',
-        theme_color: '#0f172a',
-        background_color: '#ffffff',
+        theme_color: '#000000',
+        background_color: '#000000',
         display: 'standalone',
         orientation: 'any',
         lang: 'pt-BR',

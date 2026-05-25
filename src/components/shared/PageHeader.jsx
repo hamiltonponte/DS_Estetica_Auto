@@ -26,7 +26,7 @@ export default function PageHeader({ title, subtitle, actionLabel, onAction, chi
         <div className="flex items-center gap-2">
           {children}
           {actionLabel && onAction && (
-            <Button onClick={onAction} className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20">
+            <Button onClick={onAction} className="btn-brand">
               <Plus className="w-4 h-4 mr-2" />
               {actionLabel}
             </Button>
