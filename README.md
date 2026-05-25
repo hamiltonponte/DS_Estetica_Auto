@@ -28,8 +28,10 @@ Abra no **Chrome** ou **Edge** para testar a seleção de pasta.
 ## Publicar no GitHub Pages
 
 1. Push deste projeto para `https://github.com/hamiltonponte/DS_Estetica_Auto.git`
-2. No GitHub: **Settings → Pages → Source: GitHub Actions**
-3. O workflow publica automaticamente em cada push na branch `main`
+2. No GitHub: **Settings → Pages**
+3. **Build and deployment → Source:** escolha **Deploy from a branch**
+4. **Branch:** `gh-pages` · pasta **`/ (root)`**
+5. Cada push em `main` gera o build e atualiza a branch `gh-pages`
 
 URL final: `https://hamiltonponte.github.io/DS_Estetica_Auto/`
 
