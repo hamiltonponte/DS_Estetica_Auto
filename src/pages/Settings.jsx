@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Save, Building2, Phone, CreditCard, Bell, FileSpreadsheet, Upload, Trash2, Palette, Check, Database, Cloud, FolderOpen } from 'lucide-react';
+import { Save, Building2, Phone, CreditCard, Bell, FileSpreadsheet, Upload, Trash2, Palette, Check, Database, Cloud, FolderOpen, RefreshCw, ShieldCheck } from 'lucide-react';
 import { isStorageReady } from '@/lib/storage/entityStore';
 import { syncWorkbook, downloadWorkbook } from '@/lib/storage/excelSync';
 import { downloadBackup, exportBackup, importBackup, parseBackupFile } from '@/lib/storage/backup';
@@ -21,6 +21,7 @@ import { isCloudEnabled } from '@/lib/cloud/cloudConfig';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { applyMask, maskPhone } from '@/lib/masks';
+import { consumeAppUpdatedFlag, updateAppPreservingData } from '@/lib/appUpdate';
 
 const DEFAULT_REMINDER = `Olá {nome}! 👋
 
@@ -81,6 +82,37 @@ export default function Settings() {
   const [importingBackup, setImportingBackup] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [themeOptions, setThemeOptions] = useState([]);
+  const [updatingApp, setUpdatingApp] = useState(false);
+
+  useEffect(() => {
+    if (consumeAppUpdatedFlag()) {
+      toast({
+        title: 'App atualizado',
+        description: 'Novidades instaladas. Seus dados, imagens e configurações foram preservados.',
+      });
+    }
+  }, []);
+
+  const handleUpdateApp = async () => {
+    if (updatingApp) return;
+    const ok = window.confirm(
+      'Atualizar o aplicativo agora?\n\n'
+      + 'Isso baixa só as novidades do sistema.\n'
+      + 'Seus cadastros, imagens, configurações e pasta de dados NÃO serão apagados.',
+    );
+    if (!ok) return;
+
+    setUpdatingApp(true);
+    try {
+      await updateAppPreservingData();
+    } catch (err) {
+      setUpdatingApp(false);
+      toast({
+        title: err?.message || 'Não foi possível atualizar',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleExportExcel = async () => {
     if (!isStorageReady()) return;
@@ -282,6 +314,29 @@ export default function Settings() {
     <div className="min-h-screen">
       <PageHeader title="Configurações" subtitle="Dados do negócio, identidade visual e preferências" />
       <form onSubmit={handleSubmit} className="px-4 md:px-6 py-6 max-w-2xl space-y-6">
+
+        <SettingsSection icon={RefreshCw} title="Atualizar aplicativo">
+          <p className="text-sm text-muted-foreground">
+            Busca a versão mais recente do app neste aparelho. Atualiza apenas o código e a interface.
+          </p>
+          <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-3 flex gap-2">
+            <ShieldCheck className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground">
+              <span className="text-foreground font-medium">Seus dados ficam seguros.</span>
+              {' '}
+              Clientes, veículos, fotos, selos, configurações, login e pasta de dados não são apagados.
+            </p>
+          </div>
+          <Button
+            type="button"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto"
+            onClick={handleUpdateApp}
+            disabled={updatingApp}
+          >
+            <RefreshCw className={cn('w-4 h-4 mr-2', updatingApp && 'animate-spin')} />
+            {updatingApp ? 'Atualizando...' : 'Atualizar app agora'}
+          </Button>
+        </SettingsSection>
 
         <SettingsSection icon={FolderOpen} title="Pasta de dados no aparelho">
           <DataFolderPanel />
