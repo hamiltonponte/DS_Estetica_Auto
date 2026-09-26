@@ -103,3 +103,46 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--accent) / 0.55);
 }
+
+/* Impressão da nota: só o recibo profissional, sem avisos/UI */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: white !important;
+    color: black !important;
+    background-image: none !important;
+  }
+
+  body.printing-receipt > *:not(#print-root) {
+    display: none !important;
+  }
+
+  body.printing-receipt #print-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  body.printing-receipt #receipt-print-clone {
+    display: block !important;
+    visibility: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: black !important;
+    background: white !important;
+  }
+
+  [data-toast-root],
+  [data-radix-toast-viewport],
+  [toast-close],
+  .print\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}

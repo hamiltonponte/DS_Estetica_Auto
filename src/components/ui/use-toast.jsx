@@ -1,8 +1,8 @@
-// Inspired by react-hot-toast library
 import { useState, useEffect } from "react";
 
-const TOAST_LIMIT = 20;
-const TOAST_REMOVE_DELAY = 1000000;
+const TOAST_LIMIT = 3;
+const TOAST_DURATION = 3500;
+const TOAST_REMOVE_DELAY = 200;
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -19,30 +19,26 @@ function genId() {
 }
 
 const toastTimeouts = new Map();
+const autoDismissTimeouts = new Map();
 
 const addToRemoveQueue = (toastId) => {
-  if (toastTimeouts.has(toastId)) {
-    return;
-  }
+  if (toastTimeouts.has(toastId)) return;
 
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId);
-    dispatch({
-      type: actionTypes.REMOVE_TOAST,
-      toastId,
-    });
+    dispatch({ type: actionTypes.REMOVE_TOAST, toastId });
   }, TOAST_REMOVE_DELAY);
 
   toastTimeouts.set(toastId, timeout);
 };
 
-const _clearFromRemoveQueue = (toastId) => {
-  const timeout = toastTimeouts.get(toastId);
-  if (timeout) {
-    clearTimeout(timeout);
-    toastTimeouts.delete(toastId);
+function clearAutoDismiss(toastId) {
+  const t = autoDismissTimeouts.get(toastId);
+  if (t) {
+    clearTimeout(t);
+    autoDismissTimeouts.delete(toastId);
   }
-};
+}
 
 export const reducer = (state, action) => {
   switch (action.type) {
@@ -63,44 +59,39 @@ export const reducer = (state, action) => {
     case actionTypes.DISMISS_TOAST: {
       const { toastId } = action;
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
+        clearAutoDismiss(toastId);
         addToRemoveQueue(toastId);
       } else {
-        state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id);
+        state.toasts.forEach((toastItem) => {
+          clearAutoDismiss(toastItem.id);
+          addToRemoveQueue(toastItem.id);
         });
       }
 
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-                open: false,
-              }
-            : t
+          t.id === toastId || toastId === undefined ? { ...t, open: false } : t
         ),
       };
     }
+
     case actionTypes.REMOVE_TOAST:
       if (action.toastId === undefined) {
-        return {
-          ...state,
-          toasts: [],
-        };
+        return { ...state, toasts: [] };
       }
       return {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.toastId),
       };
+
+    default:
+      return state;
   }
 };
 
 const listeners = [];
-
 let memoryState = { toasts: [] };
 
 function dispatch(action) {
@@ -110,13 +101,13 @@ function dispatch(action) {
   });
 }
 
-function toast({ ...props }) {
+function toast({ duration = TOAST_DURATION, ...props }) {
   const id = genId();
 
-  const update = (props) =>
+  const update = (next) =>
     dispatch({
       type: actionTypes.UPDATE_TOAST,
-      toast: { ...props, id },
+      toast: { ...next, id },
     });
 
   const dismiss = () =>
@@ -127,6 +118,7 @@ function toast({ ...props }) {
     toast: {
       ...props,
       id,
+      duration,
       open: true,
       onOpenChange: (open) => {
         if (!open) dismiss();
@@ -134,11 +126,13 @@ function toast({ ...props }) {
     },
   });
 
-  return {
-    id,
-    dismiss,
-    update,
-  };
+  if (duration !== Infinity && Number(duration) > 0) {
+    clearAutoDismiss(id);
+    const t = setTimeout(dismiss, Number(duration));
+    autoDismissTimeouts.set(id, t);
+  }
+
+  return { id, dismiss, update };
 }
 
 function useToast() {
@@ -146,13 +140,13 @@ function useToast() {
 
   useEffect(() => {
     listeners.push(setState);
+    // sincroniza caso o estado tenha mudado sem listener
+    setState(memoryState);
     return () => {
       const index = listeners.indexOf(setState);
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
+      if (index > -1) listeners.splice(index, 1);
     };
-  }, [state]);
+  }, []);
 
   return {
     ...state,
@@ -161,4 +155,4 @@ function useToast() {
   };
 }
 
-export { useToast, toast }; 
+export { useToast, toast };

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Play, CheckCircle2, Package, Plus, Trash2, FileText, Car, ClipboardList } from 'lucide-react';
@@ -11,6 +11,9 @@ import { Label } from '@/components/ui/label';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import ServiceReceiptModal from '@/components/service-execution/ServiceReceiptModal';
+import PaymentModal from '@/components/service-execution/PaymentModal';
+import { createPaymentDueReminder } from '@/lib/reminders';
+import { awardStampOnServiceComplete } from '@/lib/loyalty/awardStamp';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -20,6 +23,7 @@ export default function ServiceExecution() {
   const [notes, setNotes] = useState('');
   const [receiptData, setReceiptData] = useState(null);
   const [addingProduct, setAddingProduct] = useState({ product_id: '', quantity: '' });
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: appointments = [] } = useQuery({
@@ -38,10 +42,41 @@ export default function ServiceExecution() {
   });
 
   const createExecution = useMutation({
-    mutationFn: (data) => api.entities.ServiceExecution.create(data),
+    mutationFn: async (data) => {
+      const result = await api.entities.ServiceExecution.create(data);
+      if (data.payment_method === 'prazo' && data.payment_due_date) {
+        await createPaymentDueReminder({
+          clientName: data.client_name,
+          clientPhone: data.client_phone,
+          clientWhatsapp: data.client_whatsapp,
+          amount: data.total_services_price,
+          dueDate: data.payment_due_date,
+          serviceNames: data.service_names,
+          appointmentId: data.appointment_id,
+          executionId: result.id,
+          message: data.prazo_message,
+        });
+      }
+
+      const loyalty = await awardStampOnServiceComplete({
+        clientId: data.client_id,
+        clientName: data.client_name,
+      });
+
+      if (loyalty) {
+        const updated = await api.entities.ServiceExecution.update(result.id, {
+          loyalty_snapshot: loyalty,
+        });
+        return { ...result, ...updated, loyalty_snapshot: loyalty };
+      }
+
+      return result;
+    },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['service-executions'] });
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      queryClient.invalidateQueries({ queryKey: ['client-loyalty'] });
       setReceiptData(result);
       setSelectedAppointmentId('');
       setProductsUsed([]);
@@ -85,10 +120,19 @@ export default function ServiceExecution() {
 
   const handleFinalize = () => {
     if (!selectedAppointment) return;
+    setPaymentModalOpen(true);
+  };
+
+  const handlePaymentConfirm = (paymentData) => {
+    if (!selectedAppointment) return;
 
     const executionData = {
       appointment_id: selectedAppointment.id,
+      client_id: selectedAppointment.client_id || null,
       client_name: selectedAppointment.client_name,
+      client_phone: selectedAppointment.client_phone,
+      client_whatsapp: selectedAppointment.client_whatsapp,
+      client_address: selectedAppointment.client_address,
       vehicle_info: selectedAppointment.vehicle_info,
       vehicle_id: selectedAppointment.vehicle_id,
       service_names: selectedAppointment.service_names,
@@ -98,11 +142,27 @@ export default function ServiceExecution() {
       total_services_price: selectedAppointment.total_price || 0,
       total_products_cost: totalProductsCost,
       technician_notes: notes,
+      technician_name: paymentData.technician_name,
+      payment_method: paymentData.payment_method,
+      payment_status: paymentData.payment_status,
+      amount_received: paymentData.amount_received,
+      payment_due_date: paymentData.payment_due_date || null,
+      prazo_message: paymentData.prazo_message || '',
       receipt_sent: false,
     };
 
     createExecution.mutate(executionData);
-    updateAppointment.mutate({ id: selectedAppointment.id, data: { ...selectedAppointment, status: 'concluido' } });
+    updateAppointment.mutate({
+      id: selectedAppointment.id,
+      data: {
+        ...selectedAppointment,
+        status: 'concluido',
+        payment_status: paymentData.payment_status,
+        payment_method: paymentData.payment_method,
+        payment_due_date: paymentData.payment_due_date || null,
+      },
+    });
+    setPaymentModalOpen(false);
   };
 
   return (
@@ -297,6 +357,19 @@ export default function ServiceExecution() {
         <ServiceReceiptModal
           execution={receiptData}
           onClose={() => setReceiptData(null)}
+        />
+      )}
+
+      {paymentModalOpen && selectedAppointment && (
+        <PaymentModal
+          open={paymentModalOpen}
+          onOpenChange={setPaymentModalOpen}
+          onConfirm={handlePaymentConfirm}
+          totalAmount={selectedAppointment.total_price || 0}
+          appointmentId={selectedAppointment.id}
+          clientName={selectedAppointment.client_name}
+          clientWhatsapp={selectedAppointment.client_whatsapp || selectedAppointment.client_phone}
+          serviceNames={selectedAppointment.service_names}
         />
       )}
     </div>

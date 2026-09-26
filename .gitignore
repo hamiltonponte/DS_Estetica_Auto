@@ -29,3 +29,10 @@ dist-ssr
 
 .env
 .vite
+
+# Exportações locais (podem conter dados da conta)
+data/seed/services-from-base44.json
+
+# Credenciais locais
+docs/tech.env
+**/tech.env

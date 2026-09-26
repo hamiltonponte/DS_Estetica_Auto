@@ -38,27 +38,27 @@ function normalizeImportList(data) {
   );
 }
 
-/** Carrega catálogo padrão (espelha categorias do Base44) se ainda não houver serviços. */
-export async function seedServicesIfEmpty(rootHandle) {
-  const existing = await readCollection(rootHandle, 'Service');
+/** Carrega catálogo padrão se ainda não houver serviços. */
+export async function seedServicesIfEmpty() {
+  const existing = await readCollection(null, 'Service');
   if (existing.length > 0) {
     return { seeded: false, count: existing.length };
   }
   const services = withIds(seedServices);
-  await writeCollection(rootHandle, 'Service', services);
-  await syncWorkbook(rootHandle);
+  await writeCollection(null, 'Service', services);
+  await syncWorkbook();
   window.dispatchEvent(new CustomEvent('ds-estetica-data-changed'));
   return { seeded: true, count: services.length };
 }
 
 /** Importa serviços de JSON exportado do Base44 (ou lista manual). */
-export async function importServicesFromJson(rootHandle, jsonData, { replace = false } = {}) {
+export async function importServicesFromJson(jsonData, { replace = false } = {}) {
   const incoming = normalizeImportList(jsonData);
   if (incoming.length === 0) {
     throw new Error('Nenhum serviço válido encontrado no arquivo.');
   }
 
-  const existing = replace ? [] : await readCollection(rootHandle, 'Service');
+  const existing = replace ? [] : await readCollection(null, 'Service');
   const byKey = new Map(existing.map((s) => [s.id || s.name.toLowerCase(), s]));
 
   for (const row of incoming) {
@@ -72,8 +72,8 @@ export async function importServicesFromJson(rootHandle, jsonData, { replace = f
   }
 
   const merged = [...byKey.values()];
-  await writeCollection(rootHandle, 'Service', merged);
-  await syncWorkbook(rootHandle);
+  await writeCollection(null, 'Service', merged);
+  await syncWorkbook();
   window.dispatchEvent(new CustomEvent('ds-estetica-data-changed'));
   return { count: merged.length, imported: incoming.length };
 }

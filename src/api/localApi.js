@@ -1,9 +1,5 @@
 import { createEntityStore } from '@/lib/storage/entityStore';
-import {
-  readFileAsDataUrl,
-  saveUploadFile,
-} from '@/lib/storage/fileSystem';
-import { getStorageRoot } from '@/lib/storage/entityStore';
+import { uploadMediaFile } from '@/lib/media/uploadMedia';
 
 export const api = {
   entities: {
@@ -17,21 +13,13 @@ export const api = {
     LoyaltyConfig: createEntityStore('LoyaltyConfig'),
     ClientLoyalty: createEntityStore('ClientLoyalty'),
     Subscription: createEntityStore('Subscription'),
+    Quote: createEntityStore('Quote'),
+    Reminder: createEntityStore('Reminder'),
   },
   integrations: {
     Core: {
-      async UploadFile({ file }) {
-        const root = getStorageRoot();
-        if (root && 'showDirectoryPicker' in window) {
-          try {
-            const path = await saveUploadFile(root, file);
-            return { file_url: path };
-          } catch {
-            /* fallback data url */
-          }
-        }
-        const file_url = await readFileAsDataUrl(file);
-        return { file_url };
+      async UploadFile({ file, storage = 'indexeddb', maxSizeMb = 8 }) {
+        return uploadMediaFile(file, { storage, maxSizeMb });
       },
       async SendEmail() {
         throw new Error('Envio de e-mail não disponível no modo offline.');

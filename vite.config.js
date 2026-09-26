@@ -22,9 +22,12 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['brand/logo-ds.jpg', 'pwa-192.png', 'pwa-512.png'],
       manifest: {
+        id: '/DS_Estetica_Auto/',
         name: 'DS Estética Auto — Gestão Estética Automotiva',
         short_name: 'DS Estética',
-        description: 'PWA offline DS Estética Auto — gestão de detailing com dados na pasta do aparelho.',
+        description: 'PWA offline DS Estética Auto — gestão de detailing com dados no navegador.',
+        start_url: '/DS_Estetica_Auto/',
+        scope: '/DS_Estetica_Auto/',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',

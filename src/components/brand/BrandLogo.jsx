@@ -1,6 +1,5 @@
 import { cn } from '@/lib/utils';
-
-const logoSrc = `${import.meta.env.BASE_URL}brand/logo-ds.jpg`;
+import { useBranding } from '@/lib/BrandingContext';
 
 const sizeMap = {
   xs: 'w-8 h-8',
@@ -12,10 +11,12 @@ const sizeMap = {
 };
 
 export default function BrandLogo({ size = 'md', className, showRing = true }) {
+  const { logoUrl, businessName } = useBranding();
+
   return (
     <img
-      src={logoSrc}
-      alt="DS Estética Auto"
+      src={logoUrl}
+      alt={businessName}
       className={cn(
         sizeMap[size] ?? sizeMap.md,
         'rounded-full object-cover shrink-0',

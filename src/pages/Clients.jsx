@@ -47,6 +47,8 @@ export default function Clients() {
   const filtered = clients.filter(c =>
     c.name?.toLowerCase().includes(search.toLowerCase()) ||
     c.phone?.includes(search) ||
+    c.whatsapp?.includes(search) ||
+    c.cpf?.includes(search) ||
     c.email?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -104,9 +106,9 @@ export default function Clients() {
                     <div className="min-w-0">
                       <p className="font-semibold text-sm truncate">{client.name}</p>
                       <div className="flex items-center gap-3 mt-0.5">
-                        {client.phone && (
+                        {(client.whatsapp || client.phone) && (
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Phone className="w-3 h-3" /> {client.phone}
+                            <Phone className="w-3 h-3" /> {client.whatsapp || client.phone}
                           </span>
                         )}
                         {client.email && (

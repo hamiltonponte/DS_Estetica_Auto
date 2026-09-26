@@ -22,8 +22,11 @@ function buildFinancialRows(appointments) {
       veiculo: a.vehicle_info,
       servicos: a.service_names,
       valor_total: a.total_price,
+      subtotal: a.subtotal,
+      desconto: a.discount_amount,
       status_pagamento: a.payment_status,
       forma_pagamento: a.payment_method,
+      vencimento: a.payment_due_date || '',
       status_servico: a.status,
       observacoes: a.notes,
     }));
@@ -36,23 +39,23 @@ function sheetFromRows(rows, sheetName) {
   return ws;
 }
 
-export async function syncWorkbook(rootHandle) {
+export async function syncWorkbook() {
   const wb = XLSX.utils.book_new();
 
   for (const sheet of EXCEL_SHEETS) {
     let rows = [];
     if (sheet.type === 'financial') {
-      const appointments = await readCollection(rootHandle, 'Appointment');
+      const appointments = await readCollection(null, 'Appointment');
       rows = buildFinancialRows(appointments);
     } else {
-      const items = await readCollection(rootHandle, sheet.collection);
+      const items = await readCollection(null, sheet.collection);
       rows = items.map(flattenRow);
     }
     XLSX.utils.book_append_sheet(wb, sheetFromRows(rows, sheet.name), sheet.name);
   }
 
   const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  await writeExcelFile(rootHandle, buffer);
+  await writeExcelFile(null, buffer);
   return buffer;
 }
 

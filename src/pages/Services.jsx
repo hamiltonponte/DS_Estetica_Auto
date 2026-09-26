@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Wrench, Search, MoreVertical, Pencil, Trash2, Clock } from 'lucide-react';
+import { Wrench, Search, MoreVertical, Pencil, Trash2, Clock, ImageIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import {
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import ServiceFormDialog from '@/components/services/ServiceFormDialog';
+import MediaImage from '@/components/vehicles/MediaImage';
 
 const categoryLabels = {
   polimento: 'Polimento', lavagem: 'Lavagem', higienizacao: 'Higienização',
@@ -101,25 +102,39 @@ export default function Services() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map(s => (
               <div key={s.id} className="bg-card rounded-2xl border border-border p-5 hover:shadow-md transition-all group">
-                <div className="flex items-start justify-between mb-3">
-                  <Badge variant="outline" className={categoryColors[s.category] + ' text-[10px]'}>
-                    {categoryLabels[s.category] || s.category}
-                  </Badge>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { setEditingService(s); setFormOpen(true); }}>
-                        <Pencil className="w-4 h-4 mr-2" /> Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget(s)}>
-                        <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-14 h-14 rounded-xl border border-border overflow-hidden bg-muted/40 shrink-0 flex items-center justify-center">
+                    {s.image_url ? (
+                      <MediaImage
+                        src={s.image_url}
+                        alt={s.name}
+                        className="w-full h-full object-cover"
+                        fallbackClassName="w-full h-full bg-muted"
+                      />
+                    ) : (
+                      <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 flex items-start justify-between gap-2">
+                    <Badge variant="outline" className={(categoryColors[s.category] || categoryColors.outros) + ' text-[10px]'}>
+                      {categoryLabels[s.category] || s.category}
+                    </Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 shrink-0">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => { setEditingService(s); setFormOpen(true); }}>
+                          <Pencil className="w-4 h-4 mr-2" /> Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget(s)}>
+                          <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
                 <h3 className="font-semibold text-foreground mb-1">{s.name}</h3>
                 {s.description && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{s.description}</p>}

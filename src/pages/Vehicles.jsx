@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Car, Search, MoreVertical, Pencil, Trash2 } from 'lucide-react';
@@ -14,6 +14,8 @@ import {
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import VehicleFormDialog from '@/components/vehicles/VehicleFormDialog';
+import { vehicleMatchesSearch, formatPlateDisplay } from '@/lib/vehicles/plateUtils';
+import { getVehicleDamageReports } from '@/lib/vehicles/damageReports';
 
 export default function Vehicles() {
   const [search, setSearch] = useState('');
@@ -50,10 +52,7 @@ export default function Vehicles() {
   });
 
   const filtered = vehicles.filter(v =>
-    v.brand?.toLowerCase().includes(search.toLowerCase()) ||
-    v.model?.toLowerCase().includes(search.toLowerCase()) ||
-    v.plate?.toLowerCase().includes(search.toLowerCase()) ||
-    clientMap[v.client_id]?.name?.toLowerCase().includes(search.toLowerCase())
+    vehicleMatchesSearch(v, search, clientMap[v.client_id]?.name || '')
   );
 
   const handleSave = (form) => {
@@ -76,7 +75,12 @@ export default function Vehicles() {
       <div className="px-4 md:px-6 py-4">
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar por marca, modelo, placa ou proprietário..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+          <Input
+            placeholder="Buscar por placa (ex.: ABC1D23), marca, modelo ou proprietário..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-10 uppercase"
+          />
         </div>
 
         {isLoading ? (
@@ -93,7 +97,9 @@ export default function Vehicles() {
           />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map(v => (
+            {filtered.map(v => {
+              const damageCount = getVehicleDamageReports(v).length;
+              return (
               <div key={v.id} className="bg-card rounded-2xl border border-border p-4 hover:shadow-md transition-all group">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -101,9 +107,14 @@ export default function Vehicles() {
                       <Car className="w-5 h-5 text-accent" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm">{v.brand} {v.model}</p>
-                      <p className="text-xs text-muted-foreground">{v.plate} {v.year ? `• ${v.year}` : ''} {v.color ? `• ${v.color}` : ''}</p>
+                      <p className="font-bold text-sm tracking-wide uppercase">{formatPlateDisplay(v.plate)}</p>
+                      <p className="text-xs text-muted-foreground">{v.brand} {v.model}{v.year ? ` • ${v.year}` : ''}{v.color ? ` • ${v.color}` : ''}</p>
                       <p className="text-xs text-accent mt-1">{clientMap[v.client_id]?.name || 'Sem proprietário'}</p>
+                      {damageCount > 0 && (
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {damageCount} avaria{damageCount !== 1 ? 's' : ''} documentada{damageCount !== 1 ? 's' : ''}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <DropdownMenu>
@@ -123,7 +134,8 @@ export default function Vehicles() {
                   </DropdownMenu>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 # DS Estética Auto — PWA Offline
 
-Sistema de gestão para estúdios de **estética automotiva** (detailing), sem login, com dados salvos na pasta escolhida no aparelho.
+Sistema de gestão para estúdios de **estética automotiva** (detailing), sem login, com dados salvos automaticamente no navegador (IndexedDB).
 
 **Repositório:** [github.com/hamiltonponte/DS_Estetica_Auto](https://github.com/hamiltonponte/DS_Estetica_Auto.git)
 
@@ -10,8 +10,8 @@ Sistema de gestão para estúdios de **estética automotiva** (detailing), sem l
 
 - **PWA** instalável (Chrome, Edge, Android)
 - **Sem login** — acesso direto ao painel
-- **Pasta local** — na primeira abertura, selecione onde salvar os dados
-- **Excel automático** — `ds-estetica-dados.xlsx` com abas: Clientes, Produtos, Serviços, Agendamentos, Financeiros
+- **Armazenamento local** — IndexedDB no navegador (abre direto no painel)
+- **Excel** — gere e baixe `ds-estetica-dados.xlsx` em Configurações
 - **GitHub Pages** — hospedagem estática
 
 ## Desenvolvimento local
@@ -23,7 +23,7 @@ npm install
 npm run dev
 ```
 
-Abra no **Chrome** ou **Edge** para testar a seleção de pasta.
+Abra no navegador (Chrome, Edge, Firefox, Safari).
 
 ## Publicar no GitHub Pages
 
@@ -40,19 +40,6 @@ Deploy manual:
 ```bash
 npm run build
 npm run deploy
-```
-
-## Estrutura da pasta de dados (no aparelho)
-
-```
-sua-pasta/
-├── ds-estetica.json
-├── ds-estetica-dados.xlsx
-├── data/
-│   ├── clients.json
-│   ├── products.json
-│   └── ...
-└── uploads/
 ```
 
 ## Páginas

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ImageUploadField from '@/components/shared/ImageUploadField';
 
 const CATEGORIES = [
   { value: 'polimento', label: 'Polimento' },
@@ -17,20 +18,30 @@ const CATEGORIES = [
   { value: 'outros', label: 'Outros' },
 ];
 
+const emptyForm = {
+  name: '',
+  description: '',
+  price: '',
+  duration_minutes: '',
+  category: 'outros',
+  image_url: '',
+};
+
 export default function ServiceFormDialog({ open, onOpenChange, service, onSave, isSaving }) {
-  const [form, setForm] = useState({ name: '', description: '', price: '', duration_minutes: '', category: 'outros' });
+  const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
     if (service) {
       setForm({
         name: service.name || '',
         description: service.description || '',
-        price: service.price || '',
-        duration_minutes: service.duration_minutes || '',
+        price: service.price ?? '',
+        duration_minutes: service.duration_minutes ?? '',
         category: service.category || 'outros',
+        image_url: service.image_url || '',
       });
     } else {
-      setForm({ name: '', description: '', price: '', duration_minutes: '', category: 'outros' });
+      setForm(emptyForm);
     }
   }, [service, open]);
 
@@ -40,43 +51,52 @@ export default function ServiceFormDialog({ open, onOpenChange, service, onSave,
       ...form,
       price: Number(form.price),
       duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : undefined,
+      image_url: form.image_url || '',
       active: true,
     });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{service ? 'Editar Serviço' : 'Novo Serviço'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <ImageUploadField
+            label="Imagem do serviço"
+            value={form.image_url}
+            onChange={(url) => setForm((prev) => ({ ...prev, image_url: url }))}
+            disabled={isSaving}
+            hint="Opcional · aparece na lista e na seleção de serviços"
+          />
+
           <div className="space-y-2">
             <Label>Nome do Serviço *</Label>
-            <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
           <div className="space-y-2">
             <Label>Categoria *</Label>
-            <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
+            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                {CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Preço (R$) *</Label>
-              <Input type="number" step="0.01" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required />
+              <Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
             </div>
             <div className="space-y-2">
               <Label>Duração (min)</Label>
-              <Input type="number" value={form.duration_minutes} onChange={e => setForm({ ...form, duration_minutes: e.target.value })} />
+              <Input type="number" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: e.target.value })} />
             </div>
           </div>
           <div className="space-y-2">
             <Label>Descrição</Label>
-            <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} />
+            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

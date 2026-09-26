@@ -1,102 +1,42 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import {
-  clearStoredDirectory,
-  getDirectoryName,
-  isFileSystemSupported,
-  pickDataDirectory,
-  restoreDataDirectory,
-} from '@/lib/storage/fileSystem';
-import { setStorageRoot } from '@/lib/storage/entityStore';
+import { initializeStorage } from '@/lib/storage/fileSystem';
+import { setStorageReady } from '@/lib/storage/entityStore';
 import { syncWorkbook } from '@/lib/storage/excelSync';
 import { seedServicesIfEmpty } from '@/lib/storage/seedData';
+import { restoreDataFolderOnBoot } from '@/lib/storage/dataFolder';
 
 const StorageContext = createContext(null);
 
 export function StorageProvider({ children }) {
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [folderName, setFolderName] = useState('');
   const [error, setError] = useState(null);
-  const [unsupported, setUnsupported] = useState(false);
 
-  const applyHandle = useCallback(async (handle) => {
-    setStorageRoot(handle);
-    setFolderName(await getDirectoryName(handle));
-    await seedServicesIfEmpty(handle);
-    await syncWorkbook(handle);
-    setReady(true);
-    setError(null);
-  }, []);
-
-  const tryRestore = useCallback(async () => {
+  const init = useCallback(async () => {
     setLoading(true);
-    setUnsupported(!isFileSystemSupported());
-    if (!isFileSystemSupported()) {
-      setLoading(false);
-      return;
-    }
+    setError(null);
     try {
-      const handle = await restoreDataDirectory();
-      if (handle) {
-        await applyHandle(handle);
-      } else {
-        setReady(false);
-      }
+      await initializeStorage();
+      setStorageReady(true);
+      await seedServicesIfEmpty();
+      await syncWorkbook();
+      await restoreDataFolderOnBoot();
+      setReady(true);
     } catch (e) {
       console.error(e);
       setReady(false);
-      setError('Não foi possível acessar a pasta salva. Selecione novamente.');
+      setError(e.message || 'Erro ao iniciar armazenamento local');
     } finally {
       setLoading(false);
     }
-  }, [applyHandle]);
+  }, []);
 
   useEffect(() => {
-    tryRestore();
-  }, [tryRestore]);
-
-  const selectFolder = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const handle = await pickDataDirectory();
-      await applyHandle(handle);
-    } catch (e) {
-      if (e.name === 'AbortError') {
-        setError(null);
-      } else if (e.message === 'UNSUPPORTED') {
-        setUnsupported(true);
-        setError('Seu navegador não suporta salvar em pasta. Use Chrome ou Edge no computador ou Android.');
-      } else {
-        setError(e.message || 'Erro ao selecionar pasta');
-      }
-      setReady(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const changeFolder = async () => {
-    await clearStoredDirectory();
-    setStorageRoot(null);
-    setReady(false);
-    setFolderName('');
-    await selectFolder();
-  };
+    init();
+  }, [init]);
 
   return (
-    <StorageContext.Provider
-      value={{
-        ready,
-        loading,
-        folderName,
-        error,
-        unsupported,
-        selectFolder,
-        changeFolder,
-        refresh: tryRestore,
-      }}
-    >
+    <StorageContext.Provider value={{ ready, loading, error, refresh: init }}>
       {children}
     </StorageContext.Provider>
   );

@@ -46,7 +46,7 @@ export default function SubscriptionFormDialog({ open, onOpenChange, subscriptio
       due_day: dueDay,
       due_date: format(dueDate, 'yyyy-MM-dd'),
       client_name: selectedClient?.name || '',
-      client_phone: selectedClient?.phone || '',
+      client_phone: selectedClient?.whatsapp || selectedClient?.phone || '',
     });
   };
 
@@ -62,7 +62,11 @@ export default function SubscriptionFormDialog({ open, onOpenChange, subscriptio
             <Select value={form.client_id} onValueChange={v => setForm({ ...form, client_id: v })} required>
               <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
               <SelectContent>
-                {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name} — {c.phone}</SelectItem>)}
+                {clients.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name} — {c.whatsapp || c.phone || 'sem contato'}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

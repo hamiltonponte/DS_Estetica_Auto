@@ -37,7 +37,9 @@ export default function ClientHistoryModal({ client, open, onOpenChange }) {
             </div>
             <div>
               <p className="font-bold">{client?.name}</p>
-              <p className="text-xs text-muted-foreground font-normal">{client?.phone}</p>
+              <p className="text-xs text-muted-foreground font-normal">
+                {client?.whatsapp || client?.phone || ''}
+              </p>
             </div>
           </DialogTitle>
         </DialogHeader>

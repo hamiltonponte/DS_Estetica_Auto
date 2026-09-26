@@ -1,14 +1,15 @@
-﻿import React from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { useOutletContext } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { 
   Users, Calendar, DollarSign, TrendingUp, Car,
-  Clock, CheckCircle2, AlertCircle, ArrowRight, Menu
+  Clock, CheckCircle2, AlertCircle, ArrowRight, Menu, Play, FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BrandLogo from '@/components/brand/BrandLogo';
+import { useBranding } from '@/lib/BrandingContext';
 import { Badge } from '@/components/ui/badge';
 import StatCard from '@/components/shared/StatCard';
 import ProductStockWidget from '@/components/dashboard/ProductStockWidget';
@@ -25,6 +26,7 @@ const statusConfig = {
 
 export default function Dashboard() {
   const context = useOutletContext();
+  const { businessName } = useBranding();
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const { data: clients = [] } = useQuery({
@@ -77,7 +79,7 @@ export default function Dashboard() {
               <BrandLogo size="lg" className="hidden sm:block" />
               <div>
                 <p className="text-sm font-semibold text-accent font-brand uppercase tracking-wider mb-1">
-                  DS Estética Auto
+                  {businessName}
                 </p>
                 <h1 className="text-2xl md:text-3xl font-brand font-bold capitalize">
                   {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
@@ -121,6 +123,31 @@ export default function Dashboard() {
               <p className="text-xs text-muted-foreground">a receber</p>
             </div>
           </div>
+
+          <div className="mt-5 flex flex-col sm:flex-row gap-3">
+            <Button
+              asChild
+              className="w-full sm:w-auto h-14 px-8 text-base font-semibold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/25 rounded-2xl"
+            >
+              <Link to="/iniciar-servico">
+                <Play className="w-5 h-5 mr-2" />
+                Iniciar serviço
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="w-full sm:w-auto h-14 px-8 text-base font-semibold rounded-2xl border-accent/40 bg-card/60 hover:bg-accent/10"
+            >
+              <Link to="/orcamento">
+                <FileText className="w-5 h-5 mr-2" />
+                Orçamento
+              </Link>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Mesma seleção de serviços e produtos — no orçamento o cliente entra só na hora de enviar
+          </p>
         </div>
       </div>
 

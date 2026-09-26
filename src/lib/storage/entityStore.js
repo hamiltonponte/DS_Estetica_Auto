@@ -1,16 +1,19 @@
 import { syncWorkbook } from './excelSync';
 import { readCollection, writeCollection } from './fileSystem';
+import { schedulePushToCloud, isApplyingRemoteSync } from '@/lib/cloud/syncEngine';
+import { isCloudEnabled } from '@/lib/cloud/cloudConfig';
+import { scheduleDataFolderSync } from './dataFolder';
 
-let rootHandleRef = null;
+let storageReady = false;
 const listeners = new Set();
 
-export function setStorageRoot(handle) {
-  rootHandleRef = handle;
+export function setStorageReady(value = true) {
+  storageReady = value;
   listeners.forEach((fn) => fn());
 }
 
-export function getStorageRoot() {
-  return rootHandleRef;
+export function isStorageReady() {
+  return storageReady;
 }
 
 export function onStorageChange(cb) {
@@ -19,11 +22,16 @@ export function onStorageChange(cb) {
 }
 
 async function persist(collectionName, items) {
-  if (!rootHandleRef) throw new Error('Pasta de dados não configurada');
-  await writeCollection(rootHandleRef, collectionName, items);
-  await syncWorkbook(rootHandleRef);
+  if (!storageReady) throw new Error('Armazenamento não inicializado');
+  await writeCollection(null, collectionName, items);
+  await syncWorkbook();
   listeners.forEach((fn) => fn());
   window.dispatchEvent(new CustomEvent('ds-estetica-data-changed'));
+  // Espelha na pasta do celular/PC (quando o usuário criou a pasta)
+  scheduleDataFolderSync();
+  if (isCloudEnabled() && !isApplyingRemoteSync()) {
+    schedulePushToCloud();
+  }
 }
 
 function parseSort(sort) {
@@ -54,14 +62,14 @@ function applyFilter(items, where) {
 export function createEntityStore(collectionName) {
   return {
     async list(sort, limit) {
-      const items = await readCollection(rootHandleRef, collectionName);
+      const items = await readCollection(null, collectionName);
       let result = sortItems(items, sort);
       if (limit) result = result.slice(0, limit);
       return result;
     },
 
     async filter(where, sort, limit) {
-      const items = await readCollection(rootHandleRef, collectionName);
+      const items = await readCollection(null, collectionName);
       let result = applyFilter(items, where);
       result = sortItems(result, sort);
       if (limit) result = result.slice(0, limit);
@@ -69,7 +77,7 @@ export function createEntityStore(collectionName) {
     },
 
     async create(data) {
-      const items = await readCollection(rootHandleRef, collectionName);
+      const items = await readCollection(null, collectionName);
       const now = new Date().toISOString();
       const record = {
         ...data,
@@ -83,7 +91,7 @@ export function createEntityStore(collectionName) {
     },
 
     async update(id, data) {
-      const items = await readCollection(rootHandleRef, collectionName);
+      const items = await readCollection(null, collectionName);
       const idx = items.findIndex((i) => i.id === id);
       if (idx === -1) throw new Error('Registro não encontrado');
       const updated = {
@@ -98,7 +106,7 @@ export function createEntityStore(collectionName) {
     },
 
     async delete(id) {
-      const items = await readCollection(rootHandleRef, collectionName);
+      const items = await readCollection(null, collectionName);
       const next = items.filter((i) => i.id !== id);
       await persist(collectionName, next);
     },

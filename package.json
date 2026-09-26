@@ -20,7 +20,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "xlsx": "^0.18.5",
     "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^4.1.2",
     "@radix-ui/react-accordion": "^1.2.3",
@@ -67,6 +66,7 @@
     "lucide-react": "^0.475.0",
     "moment": "^2.30.1",
     "next-themes": "^0.4.4",
+    "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.2.0",
@@ -83,6 +83,7 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.171.0",
     "vaul": "^1.1.2",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -98,12 +99,12 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.18",
     "eslint-plugin-unused-imports": "^4.3.0",
+    "gh-pages": "^6.3.0",
     "globals": "^15.14.0",
     "postcss": "^8.5.3",
+    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.2",
-    "gh-pages": "^6.3.0",
-    "sharp": "^0.33.5",
     "vite": "^6.1.0",
     "vite-plugin-pwa": "^0.21.2"
   }
