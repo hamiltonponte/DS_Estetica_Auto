@@ -21,6 +21,7 @@ import { validateBookingSlot } from '@/lib/booking/bookingSlots';
 import { toast } from '@/components/ui/use-toast';
 import { isCloudEnabled, getAuthToken } from '@/lib/cloud/cloudConfig';
 import { pullFromCloud } from '@/lib/cloud/syncEngine';
+import { pullBookingInbox } from '@/lib/booking/bookingShopSync';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -42,13 +43,22 @@ export default function Appointments() {
 
   // Busca agendamentos feitos pelo link do Instagram
   useEffect(() => {
-    if (!isCloudEnabled() || !getAuthToken()) return undefined;
     let cancelled = false;
-    pullFromCloud({ full: false })
-      .then(() => {
-        if (!cancelled) queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      })
-      .catch(() => {});
+    (async () => {
+      try {
+        await pullBookingInbox();
+      } catch {
+        // página ainda não publicada ou sem rede
+      }
+      if (isCloudEnabled() && getAuthToken()) {
+        try {
+          await pullFromCloud({ full: false });
+        } catch {
+          // ignore
+        }
+      }
+      if (!cancelled) queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    })();
     return () => { cancelled = true; };
   }, [queryClient]);
 
