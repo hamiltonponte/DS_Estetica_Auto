@@ -22,7 +22,6 @@ import Settings from '@/pages/Settings';
 import Reminders from '@/pages/Reminders';
 import Quotes from '@/pages/Quotes';
 import QuoteStart from '@/pages/QuoteStart';
-import CloudLogin from '@/pages/CloudLogin';
 import PublicBookingPage from '@/pages/PublicBookingPage';
 
 function isPublicBookingPath(pathname) {
@@ -49,9 +48,7 @@ function AppRoutes() {
 
 function StaffAppRoutes() {
   const { ready, loading, error } = useStorage();
-  const { enabled: cloudEnabled, isAuthenticated, booting: cloudBooting, syncing } = useCloudAuth();
-  const skipCloud = typeof window !== 'undefined'
-    && window.localStorage?.getItem('ds-estetica-skip-cloud-login') === '1';
+  const { booting: cloudBooting, syncing } = useCloudAuth();
 
   useEffect(() => {
     const refresh = () => queryClientInstance.invalidateQueries();
@@ -80,10 +77,6 @@ function StaffAppRoutes() {
         </p>
       </div>
     );
-  }
-
-  if (cloudEnabled && !isAuthenticated && !skipCloud) {
-    return <CloudLogin />;
   }
 
   return (

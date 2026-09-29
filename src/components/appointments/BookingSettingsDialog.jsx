@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Check, Link2 } from 'lucide-react';
+import { Copy, Check, Link2, Cloud, LogIn, LogOut, Loader2 } from 'lucide-react';
 import { api } from '@/api/apiClient';
 import { useBranding } from '@/lib/BrandingContext';
+import { useCloudAuth } from '@/lib/cloud/CloudAuthContext';
 import { isCloudEnabled, getAuthToken } from '@/lib/cloud/cloudConfig';
 import { syncNow } from '@/lib/cloud/syncEngine';
 import {
@@ -35,9 +36,14 @@ function ensureConfig(list, businessName) {
 export default function BookingSettingsDialog({ open, onOpenChange }) {
   const queryClient = useQueryClient();
   const { businessName } = useBranding();
+  const { login, logout, user, syncing: cloudSyncing } = useCloudAuth();
   const [form, setForm] = useState(DEFAULT_BOOKING_CONFIG);
   const [copied, setCopied] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [cloudEmail, setCloudEmail] = useState('');
+  const [cloudPassword, setCloudPassword] = useState('');
+  const [cloudLoading, setCloudLoading] = useState(false);
+  const [cloudError, setCloudError] = useState('');
 
   const { data: configs = [], isLoading } = useQuery({
     queryKey: ['booking-config'],
@@ -48,6 +54,7 @@ export default function BookingSettingsDialog({ open, onOpenChange }) {
   useEffect(() => {
     if (!open) return;
     setForm(ensureConfig(configs, businessName));
+    setCloudError('');
   }, [open, configs, businessName]);
 
   const publicUrl = useMemo(
@@ -56,6 +63,26 @@ export default function BookingSettingsDialog({ open, onOpenChange }) {
   );
 
   const cloudReady = isCloudEnabled() && Boolean(getAuthToken());
+
+  const handleCloudLogin = async (e) => {
+    e.preventDefault();
+    setCloudError('');
+    setCloudLoading(true);
+    try {
+      await login(cloudEmail.trim(), cloudPassword);
+      setCloudPassword('');
+      toast({ title: 'Conectado à nuvem. Seus dados locais foram preservados.' });
+    } catch (err) {
+      setCloudError(err?.message || 'Não foi possível conectar.');
+    } finally {
+      setCloudLoading(false);
+    }
+  };
+
+  const handleCloudLogout = () => {
+    logout();
+    toast({ title: 'Desconectado da nuvem (dados locais mantidos)' });
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
@@ -80,15 +107,15 @@ export default function BookingSettingsDialog({ open, onOpenChange }) {
       queryClient.invalidateQueries({ queryKey: ['booking-config'] });
       toast({ title: 'Configurações de agendamento salvas' });
 
-      if (cloudReady) {
+      if (isCloudEnabled() && Boolean(getAuthToken())) {
         setSyncing(true);
         try {
           await syncNow({ preferPullFirst: true });
-          toast({ title: 'Link sincronizado na nuvem — pronto para o Instagram' });
+          toast({ title: 'Link sincronizado — pronto para o Instagram' });
         } catch (err) {
           toast({
             title: 'Salvo neste aparelho, mas a sincronização falhou',
-            description: err?.message || 'Tente sincronizar em Configurações.',
+            description: err?.message || 'Conecte à nuvem e tente salvar de novo.',
             variant: 'destructive',
           });
         } finally {
@@ -137,6 +164,74 @@ export default function BookingSettingsDialog({ open, onOpenChange }) {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Conexão nuvem — necessária só para o link do Instagram */}
+            <div className="rounded-xl border border-border p-3 space-y-3">
+              <div className="flex items-start gap-2">
+                <Cloud className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">Conexão para o link do Instagram</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    O app abre normalmente sem login. A nuvem só é usada para o cliente agendar
+                    pelo Instagram e o horário aparecer em Agendados. Seus cadastros locais não são apagados.
+                  </p>
+                </div>
+              </div>
+
+              {cloudReady ? (
+                <div className="flex items-center justify-between gap-2 rounded-lg bg-green-500/10 border border-green-500/20 px-3 py-2">
+                  <p className="text-xs text-green-700 dark:text-green-400 truncate">
+                    Conectado{user?.email ? `: ${user.email}` : ''}
+                  </p>
+                  <Button type="button" variant="ghost" size="sm" onClick={handleCloudLogout}>
+                    <LogOut className="w-3.5 h-3.5 mr-1" />
+                    Sair
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleCloudLogin} className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Input
+                      type="email"
+                      autoComplete="email"
+                      placeholder="E-mail da nuvem"
+                      value={cloudEmail}
+                      onChange={(e) => setCloudEmail(e.target.value)}
+                      required
+                    />
+                    <Input
+                      type="password"
+                      autoComplete="current-password"
+                      placeholder="Senha"
+                      value={cloudPassword}
+                      onChange={(e) => setCloudPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  {cloudError && (
+                    <p className="text-xs text-destructive">{cloudError}</p>
+                  )}
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    className="w-full"
+                    disabled={cloudLoading || cloudSyncing}
+                  >
+                    {cloudLoading || cloudSyncing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Conectando...
+                      </>
+                    ) : (
+                      <>
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Conectar à nuvem
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
+            </div>
+
             <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
               <div>
                 <p className="text-sm font-medium">Ativar link público</p>
@@ -167,7 +262,7 @@ export default function BookingSettingsDialog({ open, onOpenChange }) {
               )}
               {!cloudReady && (
                 <p className="text-xs text-amber-600 mt-1">
-                  Para o link do Instagram funcionar em qualquer celular, faça login na nuvem em Configurações e sincronize.
+                  Conecte à nuvem acima e salve para o link funcionar no Instagram.
                 </p>
               )}
             </div>
@@ -271,7 +366,6 @@ export default function BookingSettingsDialog({ open, onOpenChange }) {
               <Link2 className="w-4 h-4 text-accent shrink-0 mt-0.5" />
               <p className="text-xs text-muted-foreground">
                 Cole o link na bio do Instagram. Horários iguais não são aceitos e o limite diário é respeitado.
-                Seus cadastros atuais não são apagados.
               </p>
             </div>
           </div>
