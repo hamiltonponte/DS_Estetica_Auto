@@ -13,11 +13,11 @@ import {
   fetchPublicBookingSlots,
 } from '@/lib/booking/publicBookingApi';
 import {
-  buildIcsEvent,
-  downloadIcs,
+  addEventToDeviceCalendar,
 } from '@/lib/booking/bookingSlots';
 import { formatMoney } from '@/lib/whatsapp';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/use-toast';
 
 const DEFAULT_LOGO = `${import.meta.env.BASE_URL}brand/logo-ds.jpg`;
 
@@ -37,6 +37,7 @@ export default function PublicBookingPage() {
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(null);
+  const [calendarSaving, setCalendarSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,18 +122,33 @@ export default function PublicBookingPage() {
     }
   };
 
-  const handleSaveCalendar = () => {
-    if (!done?.appointment || !page) return;
+  const handleSaveCalendar = async () => {
+    if (!done?.appointment || !page || calendarSaving) return;
     const apt = done.appointment;
-    const ics = buildIcsEvent({
-      title: `${page.business?.name || 'Agendamento'} — ${apt.service_names || 'Serviço'}`,
-      description: `Agendamento confirmado.\nCliente: ${apt.client_name}\n${apt.notes || ''}`.trim(),
-      date: apt.date,
-      time: apt.time,
-      durationMinutes: Number(page.booking?.slot_minutes) || 60,
-      location: page.business?.address || '',
-    });
-    downloadIcs(`agendamento-${apt.date}.ics`, ics);
+    setCalendarSaving(true);
+    try {
+      const result = await addEventToDeviceCalendar({
+        title: `${page.business?.name || 'Agendamento'} — ${apt.service_names || 'Serviço'}`,
+        description: `Agendamento confirmado.\nCliente: ${apt.client_name}\n${apt.notes || ''}`.trim(),
+        date: apt.date,
+        time: apt.time,
+        durationMinutes: Number(page.booking?.slot_minutes) || 60,
+        location: page.business?.address || '',
+      });
+      if (result.method === 'cancelled') return;
+      if (result.method === 'share') {
+        toast({ title: 'Pronto — confirme na agenda do celular' });
+      } else {
+        toast({ title: 'Abra a agenda e confirme o horário' });
+      }
+    } catch (err) {
+      toast({
+        title: err?.message || 'Não foi possível abrir a agenda',
+        variant: 'destructive',
+      });
+    } finally {
+      setCalendarSaving(false);
+    }
   };
 
   if (loading) {
@@ -170,18 +186,19 @@ export default function PublicBookingPage() {
             </p>
           </div>
           <p className="text-sm text-muted-foreground">
-            Deseja salvar este horário na agenda do seu celular?
+            Quer guardar este horário na agenda do celular? O sistema pede sua confirmação — nada é baixado automaticamente.
           </p>
           <Button
             type="button"
             className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
             onClick={handleSaveCalendar}
+            disabled={calendarSaving}
           >
             <CalendarPlus className="w-4 h-4 mr-2" />
-            Salvar na minha agenda
+            {calendarSaving ? 'Abrindo agenda...' : 'Salvar na minha agenda'}
           </Button>
           <p className="text-xs text-muted-foreground">
-            Abra o arquivo .ics baixado e confirme a permissão do calendário do aparelho.
+            No iPhone/Android, escolha a Agenda e confirme. Em outros aparelhos, abre o Google Agenda para você aceitar.
           </p>
         </div>
       </div>

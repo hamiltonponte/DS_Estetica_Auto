@@ -212,6 +212,75 @@ export function buildIcsEvent({
   ].filter(Boolean).join('\r\n');
 }
 
+/** Formata data local para Google Calendar (sem Z = horário local). */
+function fmtLocalCalendar(dt) {
+  const p = (n) => String(n).padStart(2, '0');
+  return (
+    `${dt.getFullYear()}${p(dt.getMonth() + 1)}${p(dt.getDate())}`
+    + `T${p(dt.getHours())}${p(dt.getMinutes())}${p(dt.getSeconds())}`
+  );
+}
+
+function eventDateRange({ date, time, durationMinutes = 60 }) {
+  const [y, m, d] = String(date).split('-').map(Number);
+  const [hh, mm] = String(time).split(':').map(Number);
+  const start = new Date(y, m - 1, d, hh || 0, mm || 0, 0);
+  const end = new Date(start.getTime() + durationMinutes * 60_000);
+  return { start, end };
+}
+
+/** Abre o Google Agenda para o cliente confirmar (sem baixar arquivo). */
+export function buildGoogleCalendarUrl({
+  title,
+  description,
+  date,
+  time,
+  durationMinutes = 60,
+  location = '',
+}) {
+  const { start, end } = eventDateRange({ date, time, durationMinutes });
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: title || 'Agendamento',
+    dates: `${fmtLocalCalendar(start)}/${fmtLocalCalendar(end)}`,
+    details: description || '',
+    location: location || '',
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+/**
+ * Salva na agenda do aparelho com consentimento do cliente.
+ * 1) Compartilhar → Agenda (iPhone/Android) — pede permissão do sistema
+ * 2) Senão, abre Google Agenda para confirmar (sem download)
+ */
+export async function addEventToDeviceCalendar(event) {
+  const ics = buildIcsEvent(event);
+  const file = new File([ics], 'agendamento.ics', { type: 'text/calendar' });
+
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: event.title || 'Agendamento',
+          text: 'Salvar este horário na sua agenda',
+        });
+        return { method: 'share' };
+      }
+    } catch (err) {
+      // Usuário cancelou o compartilhar — não força download
+      if (err?.name === 'AbortError') {
+        return { method: 'cancelled' };
+      }
+    }
+  }
+
+  const url = buildGoogleCalendarUrl(event);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  return { method: 'google' };
+}
+
 export function downloadIcs(filename, icsContent) {
   const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
   const url = URL.createObjectURL(blob);
