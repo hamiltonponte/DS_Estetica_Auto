@@ -84,9 +84,14 @@ export async function ensureBookingShop({ slug, businessName }) {
 async function withResolvedImage(url) {
   if (!url) return '';
   try {
-    return await resolveMediaUrl(url);
+    const resolved = await resolveMediaUrl(url);
+    // Evita payload gigante que derruba o save (logo em data URL muito grande)
+    if (typeof resolved === 'string' && resolved.startsWith('data:') && resolved.length > 350_000) {
+      return url.startsWith('http') ? url : '';
+    }
+    return resolved;
   } catch {
-    return url;
+    return url.startsWith('data:') && url.length > 350_000 ? '' : url;
   }
 }
 
