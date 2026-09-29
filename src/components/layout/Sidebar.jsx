@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 import BrandLogo from '@/components/brand/BrandLogo';
 import { useBranding } from '@/lib/BrandingContext';
 import StorageHelpDialog from '@/components/help/StorageHelpDialog';
-import CloudSyncPanel from '@/components/cloud/CloudSyncPanel';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
@@ -85,7 +84,6 @@ export default function Sidebar({ collapsed, onToggle }) {
         </nav>
 
         <div className="shrink-0 border-t border-sidebar-border p-3 space-y-2">
-          <CloudSyncPanel collapsed={collapsed} />
           {!collapsed && (
             <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/40 px-3 pb-1">
               Ajuda
