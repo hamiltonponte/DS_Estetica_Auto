@@ -15,6 +15,7 @@ export const api = {
     Subscription: createEntityStore('Subscription'),
     Quote: createEntityStore('Quote'),
     Reminder: createEntityStore('Reminder'),
+    BookingConfig: createEntityStore('BookingConfig'),
   },
   integrations: {
     Core: {

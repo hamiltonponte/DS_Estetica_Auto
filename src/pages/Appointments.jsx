@@ -1,7 +1,7 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Calendar, Search, Clock, MoreVertical, Pencil, Trash2, Play, CheckCircle2, XCircle } from 'lucide-react';
+import { Calendar, Search, Clock, MoreVertical, Pencil, Trash2, Play, CheckCircle2, XCircle, Settings2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,11 @@ import {
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import AppointmentFormDialog from '@/components/appointments/AppointmentFormDialog';
+import BookingSettingsDialog from '@/components/appointments/BookingSettingsDialog';
+import { validateBookingSlot } from '@/lib/booking/bookingSlots';
+import { toast } from '@/components/ui/use-toast';
+import { isCloudEnabled, getAuthToken } from '@/lib/cloud/cloudConfig';
+import { pullFromCloud } from '@/lib/cloud/syncEngine';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -30,18 +35,38 @@ export default function Appointments() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [formOpen, setFormOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const queryClient = useQueryClient();
+
+  // Busca agendamentos feitos pelo link do Instagram
+  useEffect(() => {
+    if (!isCloudEnabled() || !getAuthToken()) return undefined;
+    let cancelled = false;
+    pullFromCloud({ full: false })
+      .then(() => {
+        if (!cancelled) queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [queryClient]);
 
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['appointments'],
     queryFn: () => api.entities.Appointment.list('-date', 200),
   });
 
+  const { data: bookingConfigs = [] } = useQuery({
+    queryKey: ['booking-config'],
+    queryFn: () => api.entities.BookingConfig.list(),
+  });
+
   const { data: clients = [] } = useQuery({ queryKey: ['clients'], queryFn: () => api.entities.Client.list() });
   const { data: vehicles = [] } = useQuery({ queryKey: ['vehicles'], queryFn: () => api.entities.Vehicle.list() });
   const { data: services = [] } = useQuery({ queryKey: ['services'], queryFn: () => api.entities.Service.list() });
+
+  const bookingConfig = bookingConfigs[0] || null;
 
   const createMutation = useMutation({
     mutationFn: (data) => api.entities.Appointment.create(data),
@@ -67,6 +92,36 @@ export default function Appointments() {
     );
 
   const handleSave = (form) => {
+    if (bookingConfig?.enabled !== false) {
+      const check = validateBookingSlot({
+        config: bookingConfig || undefined,
+        appointments,
+        dateStr: form.date,
+        time: form.time,
+        excludeId: editingAppointment?.id || null,
+      });
+      // Só bloqueia conflito de horário igual; se config incompleta, ainda impede duplicata
+      if (!check.ok && check.error?.includes('já está ocupado')) {
+        toast({ title: check.error, variant: 'destructive' });
+        return;
+      }
+      if (bookingConfig?.enabled && !check.ok) {
+        toast({ title: check.error, variant: 'destructive' });
+        return;
+      }
+    } else {
+      const taken = appointments.some(
+        (a) => a.date === form.date
+          && a.time === form.time
+          && a.status !== 'cancelado'
+          && a.id !== editingAppointment?.id,
+      );
+      if (taken) {
+        toast({ title: 'Este horário já está ocupado. Escolha outro.', variant: 'destructive' });
+        return;
+      }
+    }
+
     if (editingAppointment) {
       updateMutation.mutate({ id: editingAppointment.id, data: form });
     } else {
@@ -85,7 +140,17 @@ export default function Appointments() {
         subtitle={`${appointments.length} agendamento${appointments.length !== 1 ? 's' : ''}`}
         actionLabel="Novo Agendamento"
         onAction={() => { setEditingAppointment(null); setFormOpen(true); }}
-      />
+      >
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          title="Configurações do link de agendamento"
+          onClick={() => setSettingsOpen(true)}
+        >
+          <Settings2 className="w-4 h-4" />
+        </Button>
+      </PageHeader>
 
       <div className="px-4 md:px-6 py-4">
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -131,6 +196,11 @@ export default function Appointments() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-semibold text-sm">{apt.client_name}</p>
                           <Badge variant="outline" className={sc.color + ' text-[10px]'}>{sc.label}</Badge>
+                          {apt.source === 'public' && (
+                            <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-[10px]">
+                              Online
+                            </Badge>
+                          )}
                           {apt.payment_status === 'pago' && (
                             <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px]">Pago</Badge>
                           )}
@@ -201,6 +271,11 @@ export default function Appointments() {
         services={services}
         onSave={handleSave}
         isSaving={createMutation.isPending || updateMutation.isPending}
+      />
+
+      <BookingSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>

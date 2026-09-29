@@ -199,7 +199,8 @@ export function schedulePushToCloud(delayMs = 4000) {
 
   if (pushTimer) clearTimeout(pushTimer);
   pushTimer = setTimeout(() => {
-    pushToCloud().catch(() => {
+    // Pull primeiro para trazer agendamentos do Instagram sem perdê-los no push
+    syncNow({ preferPullFirst: true }).catch(() => {
       // status already stored in meta
     });
   }, delayMs);

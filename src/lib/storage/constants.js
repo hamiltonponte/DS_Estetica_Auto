@@ -14,6 +14,7 @@ export const COLLECTION_FILES = {
   Subscription: 'subscriptions.json',
   Quote: 'quotes.json',
   Reminder: 'reminders.json',
+  BookingConfig: 'booking_config.json',
 };
 
 export const EXCEL_SHEETS = [

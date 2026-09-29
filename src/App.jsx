@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClientInstance } from '@/lib/query-client';
-import { HashRouter as Router, Route, Routes } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { StorageProvider, useStorage } from '@/lib/StorageContext';
 import { BrandingProvider } from '@/lib/BrandingContext';
@@ -23,8 +23,31 @@ import Reminders from '@/pages/Reminders';
 import Quotes from '@/pages/Quotes';
 import QuoteStart from '@/pages/QuoteStart';
 import CloudLogin from '@/pages/CloudLogin';
+import PublicBookingPage from '@/pages/PublicBookingPage';
+
+function isPublicBookingPath(pathname) {
+  return pathname === '/agendar' || pathname.startsWith('/agendar/');
+}
 
 function AppRoutes() {
+  const location = useLocation();
+  const publicBooking = isPublicBookingPath(location.pathname);
+
+  // Página pública do Instagram — sem login e sem depender do storage do dono
+  if (publicBooking) {
+    return (
+      <Routes>
+        <Route path="/agendar/:slug" element={<PublicBookingPage />} />
+        <Route path="/agendar" element={<PublicBookingPage />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    );
+  }
+
+  return <StaffAppRoutes />;
+}
+
+function StaffAppRoutes() {
   const { ready, loading, error } = useStorage();
   const { enabled: cloudEnabled, isAuthenticated, booting: cloudBooting, syncing } = useCloudAuth();
 
