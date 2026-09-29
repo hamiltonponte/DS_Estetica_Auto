@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import PageHeader from '@/components/shared/PageHeader';
 import ServiceProductPicker, {
   buildSelectionSummary,
+  setItemQuantity,
 } from '@/components/shared/ServiceProductPicker';
 import QuoteClientModal from '@/components/quotes/QuoteClientModal';
 import { toast } from '@/components/ui/use-toast';
@@ -16,8 +17,8 @@ import { formatMoney } from '@/lib/whatsapp';
 
 export default function QuoteStart() {
   const navigate = useNavigate();
-  const [selectedServiceIds, setSelectedServiceIds] = useState([]);
-  const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [serviceQuantities, setServiceQuantities] = useState({});
+  const [productQuantities, setProductQuantities] = useState({});
   const [notes, setNotes] = useState('');
   const [clientModalOpen, setClientModalOpen] = useState(false);
 
@@ -44,23 +45,11 @@ export default function QuoteStart() {
     () => buildSelectionSummary({
       services: activeServices,
       products: activeProducts,
-      selectedServiceIds,
-      selectedProductIds,
+      serviceQuantities,
+      productQuantities,
     }),
-    [activeServices, activeProducts, selectedServiceIds, selectedProductIds],
+    [activeServices, activeProducts, serviceQuantities, productQuantities],
   );
-
-  const toggleService = (id) => {
-    setSelectedServiceIds((prev) => (
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    ));
-  };
-
-  const toggleProduct = (id) => {
-    setSelectedProductIds((prev) => (
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    ));
-  };
 
   const handleSendClick = () => {
     if (summary.items.length === 0) {
@@ -71,8 +60,8 @@ export default function QuoteStart() {
   };
 
   const resetSelection = () => {
-    setSelectedServiceIds([]);
-    setSelectedProductIds([]);
+    setServiceQuantities({});
+    setProductQuantities({});
     setNotes('');
   };
 
@@ -95,16 +84,20 @@ export default function QuoteStart() {
             O que incluir no orçamento?
           </h3>
           <p className="text-sm text-muted-foreground">
-            Selecione um ou mais serviços e/ou produtos. Depois clique em enviar e informe o cliente.
+            Selecione itens e ajuste a quantidade. Depois clique em enviar e informe o cliente.
           </p>
 
           <ServiceProductPicker
             services={activeServices}
             products={activeProducts}
-            selectedServiceIds={selectedServiceIds}
-            selectedProductIds={selectedProductIds}
-            onToggleService={toggleService}
-            onToggleProduct={toggleProduct}
+            serviceQuantities={serviceQuantities}
+            productQuantities={productQuantities}
+            onServiceQuantityChange={(id, qty) => {
+              setServiceQuantities((prev) => setItemQuantity(prev, id, qty));
+            }}
+            onProductQuantityChange={(id, qty) => {
+              setProductQuantities((prev) => setItemQuantity(prev, id, qty));
+            }}
             isLoading={loadingServices || loadingProducts}
           />
 

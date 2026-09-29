@@ -14,6 +14,7 @@ import MaskedInput from '@/components/ui/masked-input';
 import PageHeader from '@/components/shared/PageHeader';
 import ServiceProductPicker, {
   buildSelectionSummary,
+  setItemQuantity,
 } from '@/components/shared/ServiceProductPicker';
 import PaymentModal from '@/components/service-execution/PaymentModal';
 import ServiceReceiptModal from '@/components/service-execution/ServiceReceiptModal';
@@ -42,8 +43,8 @@ export default function QuickStartService() {
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState(STEPS.SELECT);
-  const [selectedServiceIds, setSelectedServiceIds] = useState([]);
-  const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [serviceQuantities, setServiceQuantities] = useState({});
+  const [productQuantities, setProductQuantities] = useState({});
   const [notes, setNotes] = useState('');
   const [discountType, setDiscountType] = useState('fixed'); // fixed | percent
   const [discountInput, setDiscountInput] = useState('');
@@ -77,11 +78,14 @@ export default function QuickStartService() {
     () => buildSelectionSummary({
       services: activeServices,
       products: activeProducts,
-      selectedServiceIds,
-      selectedProductIds,
+      serviceQuantities,
+      productQuantities,
     }),
-    [activeServices, activeProducts, selectedServiceIds, selectedProductIds],
+    [activeServices, activeProducts, serviceQuantities, productQuantities],
   );
+
+  const selectedServiceIds = summary.selectedServiceIds;
+  const selectedProductIds = summary.selectedProductIds;
 
   const totalPrice = summary.total;
   const itemNames = summary.names;
@@ -145,18 +149,6 @@ export default function QuickStartService() {
       setStep(STEPS.DONE);
     },
   });
-
-  const toggleService = (id) => {
-    setSelectedServiceIds((prev) => (
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    ));
-  };
-
-  const toggleProduct = (id) => {
-    setSelectedProductIds((prev) => (
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    ));
-  };
 
   const startService = () => {
     if (summary.items.length === 0) {
@@ -274,8 +266,8 @@ export default function QuickStartService() {
 
   const resetFlow = () => {
     setStep(STEPS.SELECT);
-    setSelectedServiceIds([]);
-    setSelectedProductIds([]);
+    setServiceQuantities({});
+    setProductQuantities({});
     setNotes('');
     setDiscountType('fixed');
     setDiscountInput('');
@@ -305,16 +297,20 @@ export default function QuickStartService() {
               O que será feito?
             </h3>
             <p className="text-sm text-muted-foreground">
-              Selecione um ou mais serviços e/ou produtos. O cadastro do cliente só aparece no final, se você quiser.
+              Selecione itens e ajuste a quantidade. O cadastro do cliente só aparece no final, se você quiser.
             </p>
 
             <ServiceProductPicker
               services={activeServices}
               products={activeProducts}
-              selectedServiceIds={selectedServiceIds}
-              selectedProductIds={selectedProductIds}
-              onToggleService={toggleService}
-              onToggleProduct={toggleProduct}
+              serviceQuantities={serviceQuantities}
+              productQuantities={productQuantities}
+              onServiceQuantityChange={(id, qty) => {
+                setServiceQuantities((prev) => setItemQuantity(prev, id, qty));
+              }}
+              onProductQuantityChange={(id, qty) => {
+                setProductQuantities((prev) => setItemQuantity(prev, id, qty));
+              }}
               isLoading={loadingServices || loadingProducts}
             />
 

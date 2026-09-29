@@ -27,7 +27,10 @@ export function buildQuoteMessage({
   const lines = items.map((item) => {
     const qty = item.quantity > 1 ? `${item.quantity}x ` : '';
     const unit = item.unit ? ` (${item.unit})` : '';
-    return `• ${qty}${item.name}${unit}\n  R$ ${formatMoney(item.total)}`;
+    const priceLine = item.quantity > 1
+      ? `  ${item.quantity} × R$ ${formatMoney(item.unit_price)} = R$ ${formatMoney(item.total)}`
+      : `  R$ ${formatMoney(item.total)}`;
+    return `• ${qty}${item.name}${unit}\n${priceLine}`;
   });
 
   return [
