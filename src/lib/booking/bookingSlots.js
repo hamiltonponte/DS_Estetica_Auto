@@ -66,9 +66,10 @@ export function generateDaySlots(config, dateStr) {
   return slots;
 }
 
+/** Ocupa horário na agenda (ainda não concluído/cancelado). */
 export function isActiveAppointment(apt) {
   if (!apt) return false;
-  return apt.status !== 'cancelado';
+  return apt.status === 'agendado' || apt.status === 'em_andamento';
 }
 
 export function countAppointmentsOnDate(appointments, dateStr) {

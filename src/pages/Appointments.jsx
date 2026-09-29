@@ -113,7 +113,7 @@ export default function Appointments() {
       const taken = appointments.some(
         (a) => a.date === form.date
           && a.time === form.time
-          && a.status !== 'cancelado'
+          && (a.status === 'agendado' || a.status === 'em_andamento')
           && a.id !== editingAppointment?.id,
       );
       if (taken) {
