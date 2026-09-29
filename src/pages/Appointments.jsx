@@ -138,8 +138,6 @@ export default function Appointments() {
       <PageHeader
         title="Agendamentos"
         subtitle={`${appointments.length} agendamento${appointments.length !== 1 ? 's' : ''}`}
-        actionLabel="Novo Agendamento"
-        onAction={() => { setEditingAppointment(null); setFormOpen(true); }}
       >
         <Button
           type="button"
@@ -150,6 +148,15 @@ export default function Appointments() {
         >
           <Settings2 className="w-4 h-4" />
         </Button>
+        {filtered.length > 0 && (
+          <Button
+            type="button"
+            className="btn-brand"
+            onClick={() => { setEditingAppointment(null); setFormOpen(true); }}
+          >
+            Novo Agendamento
+          </Button>
+        )}
       </PageHeader>
 
       <div className="px-4 md:px-6 py-4">
