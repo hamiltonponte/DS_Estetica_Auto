@@ -3,6 +3,7 @@ import { Cloud, Loader2, LogIn, RefreshCw, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AuthLayout from '@/components/AuthLayout';
 import { useCloudAuth } from '@/lib/cloud/CloudAuthContext';
+import { skipCloudLogin } from '@/lib/cloud/cloudConfig';
 import { toast } from '@/components/ui/use-toast';
 
 export default function CloudLogin() {
@@ -24,6 +25,15 @@ export default function CloudLogin() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSkip = () => {
+    skipCloudLogin();
+    toast({
+      title: 'Modo só neste aparelho',
+      description: 'Para o link do Instagram funcionar, entre na nuvem depois.',
+    });
+    window.location.reload();
   };
 
   return (
@@ -85,14 +95,26 @@ export default function CloudLogin() {
             </>
           )}
         </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full"
+          onClick={handleSkip}
+          disabled={loading || syncing}
+        >
+          Continuar só neste aparelho
+        </Button>
       </form>
 
       <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4 text-xs text-muted-foreground space-y-2">
         <p className="flex items-center gap-2 font-medium text-foreground">
           <Cloud className="w-4 h-4 text-accent" />
-          Primeiro acesso em aparelho novo
+          Link do Instagram
         </p>
-        <p>Faça login com o e-mail e senha fornecidos. O app baixará automaticamente os dados da nuvem.</p>
+        <p>
+          Para clientes agendarem pelo Instagram e o horário aparecer em Agendados,
+          entre na nuvem (os dados locais não são apagados).
+        </p>
         <p className="flex items-center gap-2">
           <RefreshCw className="w-3.5 h-3.5" />
           Depois do login, cada alteração é enviada para a nuvem quando houver internet.
