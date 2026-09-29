@@ -50,6 +50,8 @@ function AppRoutes() {
 function StaffAppRoutes() {
   const { ready, loading, error } = useStorage();
   const { enabled: cloudEnabled, isAuthenticated, booting: cloudBooting, syncing } = useCloudAuth();
+  const skipCloud = typeof window !== 'undefined'
+    && window.localStorage?.getItem('ds-estetica-skip-cloud-login') === '1';
 
   useEffect(() => {
     const refresh = () => queryClientInstance.invalidateQueries();
@@ -80,7 +82,7 @@ function StaffAppRoutes() {
     );
   }
 
-  if (cloudEnabled && !isAuthenticated) {
+  if (cloudEnabled && !isAuthenticated && !skipCloud) {
     return <CloudLogin />;
   }
 

@@ -1,4 +1,7 @@
-export const CLOUD_API_URL = import.meta.env.VITE_CLOUD_API_URL || '';
+export const CLOUD_API_URL = import.meta.env.VITE_CLOUD_API_URL
+  || (import.meta.env.PROD
+    ? 'https://plusseller.185.218.125.181.sslip.io/ds-estetica-api'
+    : '');
 
 export function isCloudEnabled() {
   return Boolean(CLOUD_API_URL);
@@ -12,6 +15,23 @@ const DEVICE_KEY = 'ds-estetica-device-id';
 const TOKEN_KEY = 'ds-estetica-cloud-token';
 const USER_KEY = 'ds-estetica-cloud-user';
 const SYNC_META_KEY = 'ds-estetica-sync-meta';
+const SKIP_CLOUD_LOGIN_KEY = 'ds-estetica-skip-cloud-login';
+
+export function isCloudLoginSkipped() {
+  try {
+    return localStorage.getItem(SKIP_CLOUD_LOGIN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function skipCloudLogin() {
+  localStorage.setItem(SKIP_CLOUD_LOGIN_KEY, '1');
+}
+
+export function clearCloudLoginSkip() {
+  localStorage.removeItem(SKIP_CLOUD_LOGIN_KEY);
+}
 
 export function getDeviceId() {
   let id = localStorage.getItem(DEVICE_KEY);

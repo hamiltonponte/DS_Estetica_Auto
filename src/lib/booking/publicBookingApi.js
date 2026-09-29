@@ -6,7 +6,7 @@ export function getPublicBookingApiBase() {
     return cloudApiUrl('').replace(/\/$/, '');
   }
   const fallback = import.meta.env.VITE_PUBLIC_BOOKING_API_URL
-    || 'https://185.218.125.181/ds-estetica-api';
+    || 'https://plusseller.185.218.125.181.sslip.io/ds-estetica-api';
   return String(fallback).replace(/\/$/, '');
 }
 
